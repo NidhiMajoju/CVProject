@@ -26,18 +26,33 @@ weather_seg/
 ├── venv/                          # virtual environment (not tracked in git)
 ├── data/
 │   ├── bdd100k/
-│   │   ├── images/
+│   │   ├── 10k/
 │   │   │   ├── train/
-│   │   │   │   ├── day/
-│   │   │   │   ├── night/
-│   │   │   │   └── rain/
-│   │   │   └── val/
-│   │   │       ├── day/
-│   │   │       ├── night/
-│   │   │       └── rain/
-│   │   └── labels/
-│   │       ├── train/
-│   │       └── val/
+│   │   │   ├── val/
+│   │   │   └── test/
+│   │   ├── 100k/
+│   │   │   ├── train/
+│   │   │   ├── val/
+│   │   │   └── test/
+│   │   ├── bdd100k_seg_maps/
+│   │   │   └── labels/
+│   │   │       ├── train/
+│   │   │       └── val/
+│   │   └── bdd100k/
+│   │       ├── images/
+│   │       │   ├── train/
+│   │       │   │   ├── day/
+│   │       │   │   ├── night/
+│   │       │   │   └── rain/
+│   │       │   └── val/
+│   │       │       └── all/
+│   │       └── seg_maps/
+│   │           ├── train/
+│   │           │   ├── day/
+│   │           │   ├── night/
+│   │           │   └── rain/
+│   │           └── val/
+│   │               └── all/
 │   └── synthetic/
 │       ├── night/                 # CycleGAN-generated synthetic night images
 │       └── rain/                  # CycleGAN-generated synthetic rain images
@@ -142,10 +157,10 @@ This reads the JSON metadata and copies images into the appropriate subfolders (
 
 **Expected counts after filtering (approximate):**
 
-| Split | Daytime | Night | Rain |
-|---|---|---|---|
-| Train | ~36,000 | ~27,000 | ~8,000 |
-| Val | ~4,500 | ~3,400 | ~1,000 |
+| Split | Daytime | Night | Rain | All | Skipped
+|---|---|---|---|---|---|
+| Train | 1,732 | 87 | 152 |
+| Val |---|---|---| 1,000 | 0 |
 
 ---
 
@@ -154,7 +169,7 @@ This reads the JSON metadata and copies images into the appropriate subfolders (
 All stages can be run end-to-end from `main.py`:
 
 ```bash
-python main.py
+python main.py --stage all --synthetic_modes night rain --split val --conditions all
 ```
 
 Or run each stage individually:

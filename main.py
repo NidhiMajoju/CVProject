@@ -171,11 +171,14 @@ def main() -> None:
 
     elif args.stage == "all":
         stage_filter(dry_run=args.dry_run)
-        stage_train_cyclegan(mode=args.mode, epochs=args.epochs)
-        stage_generate_synthetic(
-            mode=args.mode,
-            checkpoint=Path(args.checkpoint) if args.checkpoint else None
-        )
+
+        for mode in args.synthetic_modes:
+            stage_train_cyclegan(mode=mode, epochs=args.epochs)
+            stage_generate_synthetic(
+                mode=mode,
+                checkpoint=Path(args.checkpoint) if args.checkpoint else None
+            )
+
         stage_train_baseline(epochs=args.epochs)
         stage_train_augmented(modes=args.synthetic_modes, epochs=args.epochs)
         stage_evaluate(split=args.split, conditions=args.conditions)

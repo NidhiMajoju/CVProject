@@ -21,7 +21,7 @@ import torchvision.transforms as T
 # ---------------------------------------------------------------------------
 
 def build_transforms(
-    image_size: int = 256,
+    image_size: int = 512,
     augment: bool = True,
 ) -> Callable:
     """Standard CycleGAN pre-processing pipeline."""

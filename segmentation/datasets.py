@@ -69,7 +69,7 @@ class SegmentationTransform:
     IMAGENET_MEAN = (0.485, 0.456, 0.406)
     IMAGENET_STD  = (0.229, 0.224, 0.225)
 
-    def __init__(self, image_size: int = 512, augment: bool = True) -> None:
+    def __init__(self, image_size: int = 256, augment: bool = True) -> None:
         self.image_size = image_size
         self.augment = augment
         self._to_tensor = T.ToTensor()
@@ -250,8 +250,9 @@ def build_augmented_dataset(
     transform = SegmentationTransform(image_size=image_size, augment=augment)
 
     # Real daytime data
-    day_images = root / "images"   / split / "day"
-    day_masks  = root / "seg_maps" / split / "day"
+    condition = "all" if split == "val" else "day"
+    day_images = root / "images"   / split / condition
+    day_masks  = root / "seg_maps" / split / condition
     day_pairs  = _collect_image_mask_pairs(day_images, day_masks)
     if not day_pairs:
         raise RuntimeError(f"No daytime pairs found under {day_images}")

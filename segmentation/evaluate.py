@@ -71,8 +71,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--split",    default="val", choices=["train", "val"],
                    help="Which split to evaluate on")
     p.add_argument("--conditions", nargs="+",
-                   default=["day", "night", "rain"],
-                   choices=["day", "night", "rain"],
+                   default=["all"],
+                   choices=["day", "night", "rain", "all"],
                    help="Conditions to evaluate")
     p.add_argument("--image_size", type=int, default=512)
     p.add_argument("--batch_size", type=int, default=4)
@@ -121,8 +121,12 @@ def evaluate_model(
         iou_<classname> for all 19 classes.
     """
     root       = Path(bdd_root)
-    images_dir = root / "images"   / split / condition
-    masks_dir  = root / "seg_maps" / split / condition
+    actual_condition = condition
+    if split == "val":
+        actual_condition = "all"
+
+    images_dir = root / "images"   / split / actual_condition
+    masks_dir  = root / "seg_maps" / split / actual_condition
 
     pairs = _collect_image_mask_pairs(images_dir, masks_dir)
     if not pairs:
@@ -198,8 +202,11 @@ def save_prediction_images(
 ) -> None:
     """Save side-by-side (original | colourised prediction) images."""
     root       = Path(bdd_root)
-    images_dir = root / "images"   / split / condition
-    masks_dir  = root / "seg_maps" / split / condition
+    actual_condition = condition
+    if split == "val":
+        actual_condition = "all"
+    images_dir = root / "images"   / split / actual_condition
+    masks_dir  = root / "seg_maps" / split / actual_condition
     pairs      = _collect_image_mask_pairs(images_dir, masks_dir)[:max_images]
 
     out_dir = output_dir / "predictions" / condition

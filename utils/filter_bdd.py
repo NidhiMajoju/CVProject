@@ -106,7 +106,6 @@ def process_train(
 
 
 def process_val(
-    labels_file: Path,
     images_dir: Path,
     masks_dir: Path | None,
     out_images_dir: Path,
@@ -115,47 +114,31 @@ def process_val(
     dry_run: bool,
 ) -> dict[str, int]:
     """
-    Sort val images into day/night/rain subfolders using the val label JSON
-    (bdd100k_labels_images_val.json), which has the same attributes structure
-    as the per-image train JSONs.
+    The 10k val images have no 100k-style JSON metadata so we cannot sort by
+    condition. Symlink everything into an 'all/' subfolder instead.
     """
-    if not labels_file.exists():
-        log.error("Val labels file not found: %s", labels_file)
-        return {"day": 0, "night": 0, "rain": 0, "skipped": 0}
+    counts = {"all": 0, "skipped": 0}
 
-    with labels_file.open() as f:
-        frames = json.load(f)
+    img_files = sorted(images_dir.glob("*.jpg"))
+    if not img_files:
+        log.error("No .jpg files found in %s", images_dir)
+        return counts
 
-    log.info("Found %d val label entries in %s", len(frames), labels_file)
-    counts: dict[str, int] = {"day": 0, "night": 0, "rain": 0, "skipped": 0}
+    log.info("Found %d val images in %s", len(img_files), images_dir)
 
-    for frame in frames:
-        attributes = frame.get("attributes", {})
-        name       = frame.get("name", "")
-        stem       = Path(name).stem
-        conditions = get_conditions(attributes)
-
-        img_src  = images_dir / f"{stem}.jpg"
+    for img_path in img_files:
+        stem     = img_path.stem
         mask_src = (masks_dir / f"{stem}_train_id.png") if masks_dir else None
-
-        if not img_src.exists():
-            counts["skipped"] += 1
-            continue
-
-        if not conditions:
-            counts["skipped"] += 1
-            continue
 
         # Only include images that have a paired mask
         if mask_src and not mask_src.exists():
             counts["skipped"] += 1
             continue
 
-        for cond in conditions:
-            transfer(img_src, out_images_dir / cond / f"{stem}.jpg", symlink, dry_run)
-            if mask_src and out_masks_dir:
-                transfer(mask_src, out_masks_dir / cond / f"{stem}_train_id.png", symlink, dry_run)
-            counts[cond] = counts.get(cond, 0) + 1
+        transfer(img_path, out_images_dir / "all" / f"{stem}.jpg", symlink, dry_run)
+        if mask_src and out_masks_dir:
+            transfer(mask_src, out_masks_dir / "all" / f"{stem}_train_id.png", symlink, dry_run)
+        counts["all"] += 1
 
     return counts
 
@@ -200,8 +183,7 @@ def main():
     if not val_masks_dir:
         log.warning("Val mask dir not found — skipping masks for val")
 
-    val_counts = process_train(
-        labels_dir     = root / "100k" / "val",
+    val_counts = process_val(
         images_dir     = root / "10k"  / "val",
         masks_dir      = val_masks_dir,
         out_images_dir = root / "bdd100k" / "images"   / "val",
@@ -209,25 +191,24 @@ def main():
         symlink        = args.symlink,
         dry_run        = args.dry_run,
     )
-    log.info(
-        "  val → day: %5d  night: %5d  rain: %5d  (skipped: %d)",
-        val_counts.get("day", 0), val_counts.get("night", 0),
-        val_counts.get("rain", 0), val_counts.get("skipped", 0),
-    )
+    log.info("  val → all: %5d  (skipped: %d)",
+             val_counts.get("all", 0), val_counts.get("skipped", 0))
 
     # ── Summary ────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
-    print(f"{'Split':<8} {'Day':>8} {'Night':>8} {'Rain':>8} {'Skipped':>9}")
+    print(f"{'Split':<8} {'Day':>8} {'Night':>8} {'Rain':>8} {'All':>8} {'Skipped':>9}")
     print("-" * 60)
     print(
         f"{'train':<8} {train_counts.get('day',0):>8,} {train_counts.get('night',0):>8,} "
-        f"{train_counts.get('rain',0):>8,} {train_counts.get('skipped',0):>9,}"
+        f"{train_counts.get('rain',0):>8,} {'—':>8} {train_counts.get('skipped',0):>9,}"
     )
     print(
-        f"{'val':<8} {val_counts.get('day',0):>8,} {val_counts.get('night',0):>8,} "
-        f"{val_counts.get('rain',0):>8,} {val_counts.get('skipped',0):>9,}"
+        f"{'val':<8} {'—':>8} {'—':>8} {'—':>8} "
+        f"{val_counts.get('all',0):>8,} {val_counts.get('skipped',0):>9,}"
     )
     print("=" * 60)
+    print("\nNOTE: Val images → bdd100k/images/val/all/")
+    print("      Update datasets.py: use 'all' as the val condition.")
 
 
 if __name__ == "__main__":

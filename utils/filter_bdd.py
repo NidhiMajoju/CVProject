@@ -200,8 +200,8 @@ def main():
     if not val_masks_dir:
         log.warning("Val mask dir not found — skipping masks for val")
 
-    val_counts = process_val(
-        labels_file    = root / "100k" / "labels" / "bdd100k_labels_images_val.json",
+    val_counts = process_train(
+        labels_dir     = root / "100k" / "val",
         images_dir     = root / "10k"  / "val",
         masks_dir      = val_masks_dir,
         out_images_dir = root / "bdd100k" / "images"   / "val",

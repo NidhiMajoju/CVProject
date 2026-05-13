@@ -159,7 +159,7 @@ This reads the JSON metadata and copies images into the appropriate subfolders (
 
 | Split | Daytime | Night | Rain | All | Skipped
 |---|---|---|---|---|---|
-| Train | 1,732 | 87 | 152 |
+| Train | 2,529 | 115 | 216 |
 | Val |---|---|---| 1,000 | 0 |
 
 ---
@@ -263,10 +263,13 @@ The project is considered successful if the augmented model achieves higher mIoU
 
 ## Expected Results
 
-A well-trained baseline model typically drops **8–15 mIoU points** when evaluated on night images compared to daytime. Synthetic augmentation is expected to recover **3–7 of those points**. Classes that tend to benefit most include road, vegetation, and sky.
+The baseline model achieved a validation mIoU of 0.507 with pixel 
+accuracy of 0.914. The augmented model achieved 0.488 mIoU. While 
+overall performance did not improve, per-class analysis showed gains 
+for underrepresented classes such as rider (+0.039), wall (+0.033), 
+and pole (+0.027).
 
 ---
-
 ## Estimated Compute Time
 
 | Stage | Estimated Time (RTX 3090) |
